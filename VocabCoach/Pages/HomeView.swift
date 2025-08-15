@@ -23,9 +23,9 @@ struct HomeView: View {
             .fontWeight(.bold)
             .foregroundColor(Shade.secondary)
 
-          Image(settings.isDarkMode ? "FlatIconDark" : "FlatIcon")  // Use the name you gave the image set
+          Image(settings.isDarkMode ? "IconDark" : "Icon")  // Use the name you gave the image set
             .resizable()
-            .frame(width: 200, height: 85)
+            .frame(width: 200, height: 200 )
 
           Button(action: {
             currentPage = .question

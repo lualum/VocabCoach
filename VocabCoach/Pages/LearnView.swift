@@ -69,7 +69,7 @@ struct LearnView: View {
         Spacer()
 
         // Buttons
-        HStack(spacing: 16) {
+        VStack(spacing: 16) {
           Button(action: {
             currentPage = .dashboard
           }) {
@@ -84,6 +84,7 @@ struct LearnView: View {
             .frame(maxWidth: .infinity)
             .background(Color.blue)
             .cornerRadius(12)
+            
           }
 
           Button(action: {

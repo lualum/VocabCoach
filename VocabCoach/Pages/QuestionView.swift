@@ -13,10 +13,12 @@ enum QuestionResult: Equatable {
   case loading
   case success(APIResponse)
   case error
+  case connectionError
 
   static func == (lhs: QuestionResult, rhs: QuestionResult) -> Bool {
     switch (lhs, rhs) {
-    case (.none, .none), (.loading, .loading), (.error, .error):
+    case (.none, .none), (.loading, .loading), (.error, .error),
+      (.connectionError, .connectionError):
       return true
     case (.success(let lhsResponse), .success(let rhsResponse)):
       return lhsResponse.usage == rhsResponse.usage
@@ -59,7 +61,7 @@ struct QuestionView: View {
 
   var body: some View {
     ZStack {
-      if result == .none || result == .loading {
+      if result == .none || result == .loading || result == .connectionError {
         // Question input screen
         VStack(spacing: 40) {
           // Word title
@@ -69,16 +71,44 @@ struct QuestionView: View {
             .foregroundColor(Shade.secondary)
             .underline()
 
-          // Input area
-          TextEditor(text: $userInput)
-            .scrollContentBackground(.hidden)
+          // Connection error message
+          if result == .connectionError {
+            HStack(spacing: 8) {
+              Image(systemName: "wifi.slash")
+                .foregroundColor(.red)
+                .font(.title2)
+              Text("Check your connection and try again")
+                .font(.body)
+                .foregroundColor(.red)
+                .fontWeight(.medium)
+            }
             .padding()
-            .background(Color.gray.opacity(0.1))
-            .cornerRadius(12)
-            .font(.body)
-            .foregroundColor(Shade.secondary)
+            .background(Color.red.opacity(0.1))
+            .cornerRadius(8)
             .padding(.horizontal, 40)
-            .frame(maxHeight: .infinity)
+          }
+
+          // Input area with placeholder
+          ZStack(alignment: .topLeading) {
+            TextEditor(text: $userInput)
+              .scrollContentBackground(.hidden)
+              .padding()
+              .background(Color.gray.opacity(0.2))
+              .cornerRadius(12)
+              .font(.body)
+              .foregroundColor(Shade.secondary)
+              .padding(.horizontal, 40)
+              .frame(maxHeight: .infinity)
+
+            if userInput.isEmpty {
+              Text("Write a sentence using the word above")
+                .font(.body)
+                .foregroundColor(.gray)
+                .padding(.horizontal, 56)
+                .padding(.vertical, 24)
+                .allowsHitTesting(false)
+            }
+          }
 
           // Action buttons
           VStack(spacing: 16) {
@@ -325,7 +355,7 @@ struct QuestionView: View {
 
     guard
       let url = URL(
-        string: "https://gemini-proxy.VocabCoachapp.workers.dev/"
+        string: "https://gemini-proxy.VocabMateapp.workers.dev/"
       )
     else {
       result = .error
@@ -355,13 +385,13 @@ struct QuestionView: View {
       DispatchQueue.main.async {
         if let error = error {
           print("Network error: \(error)")
-          result = .error
+          result = .connectionError
           return
         }
 
         guard let data = data else {
           print("No data received")
-          result = .error
+          result = .connectionError
           return
         }
 
