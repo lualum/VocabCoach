@@ -135,7 +135,7 @@ struct DashboardView: View {
               .foregroundColor(.white)
               .frame(maxWidth: .infinity)
               .frame(height: 56)
-              .background(.green)
+              .background(Gradient(colors: Shade.buttonPrimary))
               .cornerRadius(12)
             }
 
@@ -153,7 +153,7 @@ struct DashboardView: View {
               .foregroundColor(.white)
               .frame(maxWidth: .infinity)
               .frame(height: 56)
-              .background(Color.blue)
+              .background(Shade.buttonSecondary)
               .cornerRadius(12)
             }
           }
@@ -173,7 +173,8 @@ struct DashboardView: View {
     totalAttempted = allWordScores.count
 
     // Count words in each score range using the existing method
-    youKnowIt = WordEntry.countDictionaryWordsWithScoreRange(min: 5, max: 6)
+    youKnowIt = WordEntry.countDictionaryWordsWithScoreRange(
+      min: 5, max: 6, )
     canBeMorePrecise = WordEntry.countDictionaryWordsWithScoreRange(min: 4, max: 4)
     needToLearnMore = WordEntry.countDictionaryWordsWithScoreRange(min: 0, max: 3)
   }

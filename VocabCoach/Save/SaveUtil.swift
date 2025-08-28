@@ -205,7 +205,9 @@ class SaveUtil {
     return []
   }
 
-  static func loadWordsInScoreRange(min: Int, max: Int) -> [WordScore] {
+  static func loadWordsInScoreRange(min: Int, max: Int, lastElementThreshold: Int? = nil)
+    -> [WordScore]
+  {
     let scoreData = getScoreData()
     var matchingWords: [WordScore] = []
 
@@ -213,10 +215,43 @@ class SaveUtil {
       if group.averageScoreInt >= min && group.averageScoreInt <= max {
         matchingWords.append(contentsOf: group.words)
       }
+      // Exception: if last element in scores is >= lastElementThreshold, include it too
+      else {
+        for word in group.words {
+          if let lastScore = word.scores.last, let threshold = lastElementThreshold,
+            lastScore >= threshold
+          {
+            matchingWords.append(word)
+          }
+        }
+      }
     }
 
     // Return words in time order (most recent first)
     return matchingWords.sorted { $0.lastUpdated > $1.lastUpdated }
+  }
+
+  static func checkNew(daysThreshold: Int = 7) -> [WordScore] {
+    let scoreData = getScoreData()
+    let calendar = Calendar.current
+    let cutoffDate = calendar.date(byAdding: .day, value: -daysThreshold, to: Date()) ?? Date()
+
+    var newWords: [WordScore] = []
+
+    for group in scoreData.groups {
+      for word in group.words {
+        // Check if word is truly new (only has one score) or hasn't been updated recently
+        let isNewWord = word.scores.count == 1
+        let isRecentlyUpdated = word.lastUpdated > cutoffDate
+
+        if isNewWord || !isRecentlyUpdated {
+          newWords.append(word)
+        }
+      }
+    }
+
+    // Return words sorted by last updated (most recent first)
+    return newWords.sorted { $0.lastUpdated > $1.lastUpdated }
   }
 
   static func resetToInitialState() {

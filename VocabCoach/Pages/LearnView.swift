@@ -82,9 +82,9 @@ struct LearnView: View {
             .foregroundColor(.white)
             .padding()
             .frame(maxWidth: .infinity)
-            .background(Color.blue)
+            .background(Gradient(colors: Shade.buttonPrimary))
             .cornerRadius(12)
-            
+
           }
 
           Button(action: {
@@ -100,7 +100,7 @@ struct LearnView: View {
             .foregroundColor(.white)
             .padding()
             .frame(maxWidth: .infinity)
-            .background(Color.green)
+            .background(Shade.buttonSecondary)
             .cornerRadius(12)
           }
         }

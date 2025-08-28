@@ -38,7 +38,7 @@ struct FeedbackView: View {
         TextEditor(text: $feedbackText)
           .scrollContentBackground(.hidden)
           .padding()
-          .background(Color.gray.opacity(0.3))
+          .background(Color.gray.opacity(0.2))
           .cornerRadius(12)
           .font(.body)
           .foregroundColor(Shade.secondary)
@@ -91,7 +91,7 @@ struct FeedbackView: View {
           .foregroundColor(.white)
           .frame(maxWidth: .infinity)
           .padding(.vertical, 16)
-          .background(Color.gray.opacity(0.3))
+          .background(Shade.buttonSecondary)
           .cornerRadius(8)
         }.padding(.horizontal, 40)
 
@@ -106,7 +106,7 @@ struct FeedbackView: View {
           .foregroundColor(.white)
           .frame(maxWidth: .infinity)
           .padding(.vertical, 16)
-          .background(Color.blue)
+          .background(Gradient(colors: Shade.buttonPrimary))
           .cornerRadius(8)
         }.padding(.horizontal, 40)
 

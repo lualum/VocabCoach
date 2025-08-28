@@ -13,7 +13,7 @@ class Settings: ObservableObject {
     static let newWordsStudied = "newWordsStudied"
     static let attemptedCount = "attemptedCount"
     static let unattemptedCount = "unattemptedCount"
-    static let newWordsPerSession = "newWordsPerSession"
+    static let maxRecentWords = "maxRecentWords"
   }
 
   @Published var isDarkMode: Bool {
@@ -49,11 +49,11 @@ class Settings: ObservableObject {
     }
   }
 
-  @Published var newWordsPerSession: Int {
+  @Published var maxRecentWords: Int {
     didSet {
       UserDefaults.standard.set(
-        newWordsPerSession,
-        forKey: Keys.newWordsPerSession
+        maxRecentWords,
+        forKey: Keys.maxRecentWords
       )
     }
   }
@@ -80,9 +80,9 @@ class Settings: ObservableObject {
     set { shared.unattemptedCount = newValue }
   }
 
-  static var newWordsPerSession: Int {
-    get { shared.newWordsPerSession }
-    set { shared.newWordsPerSession = newValue }
+  static var maxRecentWords: Int {
+    get { shared.maxRecentWords }
+    set { shared.maxRecentWords = newValue }
   }
 
   private init() {
@@ -98,8 +98,8 @@ class Settings: ObservableObject {
     self.unattemptedCount =
       UserDefaults.standard.object(forKey: Keys.unattemptedCount)
       as? Int ?? 0
-    self.newWordsPerSession =
-      UserDefaults.standard.object(forKey: Keys.newWordsPerSession)
+    self.maxRecentWords =
+      UserDefaults.standard.object(forKey: Keys.maxRecentWords)
       as? Int ?? 10
   }
 
@@ -108,7 +108,7 @@ class Settings: ObservableObject {
     newWordsStudied = 20
     attemptedCount = 0
     unattemptedCount = 0
-    newWordsPerSession = 10
+    maxRecentWords = 10
   }
 }
 
@@ -116,6 +116,7 @@ struct SettingsPopup: View {
   @Binding var showingSettings: Bool
   @Binding var currentPage: Page
   @StateObject var settings = Settings.shared
+  @State private var showingResetConfirmation = false
 
   var body: some View {
     ZStack {
@@ -165,16 +166,16 @@ struct SettingsPopup: View {
 
           StepperSettingRow(
             title: "New Words Per Session",
-            value: $settings.newWordsPerSession,
+            value: $settings.maxRecentWords,
             range: 1...50
           )
 
           Divider()
             .background(Color.gray.opacity(0.3))
 
-          // Feedback button as regular rectangular button
           Button(action: {
             currentPage = .feedback
+            showingSettings = false
           }) {
             HStack {
               Image(systemName: "exclamationmark.bubble")
@@ -187,7 +188,26 @@ struct SettingsPopup: View {
             .padding(.vertical, 12)
             .padding(.horizontal, 20)
             .frame(maxWidth: .infinity)
-            .background(Color.orange)
+            .background(Gradient(colors: Shade.buttonPrimary))
+            .cornerRadius(8)
+          }
+          .padding(.horizontal, 20)
+
+          Button(action: {
+            showingResetConfirmation = true
+          }) {
+            HStack {
+              Image(systemName: "trash")
+                .font(.body)
+              Text("Reset Save")
+                .font(.body)
+                .fontWeight(.medium)
+            }
+            .foregroundColor(.white)
+            .padding(.vertical, 12)
+            .padding(.horizontal, 20)
+            .frame(maxWidth: .infinity)
+            .background(Shade.buttonSecondary)
             .cornerRadius(8)
           }
           .padding(.horizontal, 20)
@@ -208,8 +228,92 @@ struct SettingsPopup: View {
       )
       .cornerRadius(15)
       .shadow(radius: 20)
+
+      // Reset confirmation popup
+      if showingResetConfirmation {
+        ResetConfirmationPopup(
+          showingConfirmation: $showingResetConfirmation
+        )
+      }
     }
     .animation(.easeInOut(duration: 0.3), value: showingSettings)
+  }
+}
+
+struct ResetConfirmationPopup: View {
+  @Binding var showingConfirmation: Bool
+  @ObservedObject var settings = Settings.shared
+
+  var body: some View {
+    ZStack {
+      // Semi-transparent background
+      Color.black.opacity(0.4)
+        .ignoresSafeArea()
+        .onTapGesture {
+          showingConfirmation = false
+        }
+
+      // Confirmation popup
+      VStack(spacing: 20) {
+        VStack(spacing: 10) {
+          Image(systemName: "exclamationmark.triangle")
+            .font(.title)
+            .foregroundColor(.red)
+
+          Text("Are you sure?")
+            .font(.title2)
+            .fontWeight(.bold)
+            .foregroundColor(Shade.text)
+
+          Text(
+            "This will permanently delete all your progress and reset the app to its initial state. This action cannot be undone."
+          )
+          .font(.body)
+          .foregroundColor(Shade.secondary)
+          .multilineTextAlignment(.center)
+          .padding(.horizontal, 10)
+        }
+
+        HStack(spacing: 15) {
+          Button(action: {
+            showingConfirmation = false
+          }) {
+            Text("Cancel")
+              .font(.body)
+              .fontWeight(.medium)
+              .foregroundColor(Shade.text)
+              .padding(.vertical, 12)
+              .padding(.horizontal, 25)
+              .background(Color.gray.opacity(0.2))
+              .cornerRadius(8)
+          }
+
+          Button(action: {
+            SaveUtil.resetToInitialState()
+            showingConfirmation = false
+          }) {
+            Text("Reset")
+              .font(.body)
+              .fontWeight(.medium)
+              .foregroundColor(.white)
+              .padding(.vertical, 12)
+              .padding(.horizontal, 25)
+              .background(Color.red)
+              .cornerRadius(8)
+          }
+        }
+      }
+      .padding(25)
+      .background(
+        settings.isDarkMode
+          ? Color(red: 0.15, green: 0.15, blue: 0.15)
+          : Color.white
+      )
+      .cornerRadius(15)
+      .shadow(radius: 10)
+      .frame(maxWidth: UIScreen.main.bounds.width * 0.8)
+    }
+    .animation(.easeInOut(duration: 0.2), value: showingConfirmation)
   }
 }
 

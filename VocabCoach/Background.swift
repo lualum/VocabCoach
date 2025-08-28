@@ -30,6 +30,17 @@ class Shade: ObservableObject {
     settings.isDarkMode ? .white : .black
   }
 
+  var buttonPrimary: [Color] {
+    [
+      Color(red: 0.6, green: 0.5, blue: 0.9),
+      Color(red: 0.2, green: 0.6, blue: 0.9),
+    ]
+  }
+
+  var buttonSecondary: Color {
+    Color(red: 0.25, green: 0.3, blue: 0.4)
+  }
+
   // Static convenience properties
   static var primary: Color {
     shared.primary
@@ -45,6 +56,14 @@ class Shade: ObservableObject {
 
   static var text: Color {
     shared.text
+  }
+
+  static var buttonPrimary: [Color] {
+    shared.buttonPrimary
+  }
+
+  static var buttonSecondary: Color {
+    shared.buttonSecondary
   }
 }
 

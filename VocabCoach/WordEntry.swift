@@ -1,24 +1,5 @@
-//
-//  RootView.swift
-//  VocabCoach
-//
-//  Created by Lucas Lum on 6/1/25.
-//
-
 import Foundation
 import SwiftUI
-
-enum Page {
-  case loading
-  case home
-  case dictionary
-  case filteredDictionary  // Add this new case
-  case info
-  case question
-  case learn
-  case dashboard
-  case feedback
-}
 
 struct WordEntry {
   static var dict: [String: [String]] = [:]
@@ -26,7 +7,6 @@ struct WordEntry {
   var definitions: [String]
 
   // MARK: - Word Selection State Management
-  private static let maxRecentWords = 10
   private static let recentWordsKey = "RecentWords"
   private static let lowScoreCycleKey = "LowScoreWordCycle"
   private static let lowScoreIndexKey = "LowScoreWordIndex"
@@ -98,6 +78,168 @@ struct WordEntry {
     }
   }
 
+  // MARK: - Dictionary Management Functions
+
+  /// Add a word with its definitions to the dictionary and save to words.json
+  static func addWord(
+    _ word: String, definitions: [String],
+    completion: @escaping (Bool, String?) -> Void = { _, _ in }
+  ) {
+    guard !word.isEmpty && !definitions.isEmpty else {
+      completion(false, "Word and definitions cannot be empty")
+      return
+    }
+
+    DispatchQueue.global(qos: .userInitiated).async {
+      // Add to in-memory dictionary
+      dict[word] = definitions
+
+      // Save to file
+      let success = saveDictionaryToFile()
+
+      DispatchQueue.main.async {
+        if success {
+          completion(true, nil)
+        } else {
+          // Revert in-memory change if save failed
+          dict.removeValue(forKey: word)
+          completion(false, "Failed to save dictionary to file")
+        }
+      }
+    }
+  }
+
+  /// Remove a word from the dictionary and save to words.json
+  static func removeWord(
+    _ word: String, completion: @escaping (Bool, String?) -> Void = { _, _ in }
+  ) {
+    guard dict[word] != nil else {
+      completion(false, "Word not found in dictionary")
+      return
+    }
+
+    DispatchQueue.global(qos: .userInitiated).async {
+      // Store the removed definitions in case we need to revert
+      let removedDefinitions = dict[word]
+
+      // Remove from in-memory dictionary
+      dict.removeValue(forKey: word)
+
+      // Save to file
+      let success = saveDictionaryToFile()
+
+      DispatchQueue.main.async {
+        if success {
+          // Also clean up any references in recent words and low score cycle
+          cleanupWordReferences(word)
+          completion(true, nil)
+        } else {
+          // Revert in-memory change if save failed
+          dict[word] = removedDefinitions
+          completion(false, "Failed to save dictionary to file")
+        }
+      }
+    }
+  }
+
+  /// Reset dictionary to default words from defaultWords.json
+  static func resetToDefaultWords(completion: @escaping (Bool, String?) -> Void = { _, _ in }) {
+    DispatchQueue.global(qos: .userInitiated).async {
+      guard
+        let url = Bundle.main.url(forResource: "defaultWords", withExtension: "json"),
+        let data = try? Data(contentsOf: url),
+        let defaultDict = try? JSONDecoder().decode([String: [String]].self, from: data)
+      else {
+        DispatchQueue.main.async {
+          completion(false, "Failed to load or parse defaultWords.json")
+        }
+        return
+      }
+
+      // Store current dictionary in case we need to revert
+      let currentDict = dict
+
+      // Update in-memory dictionary
+      dict = defaultDict
+
+      // Save to words.json
+      let success = saveDictionaryToFile()
+
+      DispatchQueue.main.async {
+        if success {
+          // Reset word selection state since dictionary has changed
+          resetWordSelection()
+          completion(true, nil)
+        } else {
+          // Revert to previous dictionary if save failed
+          dict = currentDict
+          completion(false, "Failed to save default dictionary to words.json")
+        }
+      }
+    }
+  }
+
+  /// Get the current dictionary as a copy for external use
+  static func getCurrentDictionary() -> [String: [String]] {
+    return dict
+  }
+
+  /// Get count of words in dictionary
+  static func getDictionaryWordCount() -> Int {
+    return dict.count
+  }
+
+  // MARK: - Private Helper Functions
+
+  private static func saveDictionaryToFile() -> Bool {
+    guard
+      let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        .first
+    else {
+      print("Could not find documents directory")
+      return false
+    }
+
+    let wordsFileURL = documentsPath.appendingPathComponent("words.json")
+
+    do {
+      let encoder = JSONEncoder()
+      encoder.outputFormatting = .prettyPrinted
+      let jsonData = try encoder.encode(dict)
+      try jsonData.write(to: wordsFileURL)
+
+      print("Successfully saved dictionary to: \(wordsFileURL.path)")
+      return true
+    } catch {
+      print("Failed to save dictionary: \(error)")
+      return false
+    }
+  }
+
+  private static func cleanupWordReferences(_ word: String) {
+    // Remove from recent words
+    var current = recentWords
+    if let index = current.firstIndex(of: word) {
+      current.remove(at: index)
+      recentWords = current
+    }
+
+    // Remove from low score cycle
+    var cycle = lowScoreWordCycle
+    if let index = cycle.firstIndex(of: word) {
+      cycle.remove(at: index)
+      lowScoreWordCycle = cycle
+      // Adjust index if needed
+      if lowScoreWordIndex > index {
+        lowScoreWordIndex -= 1
+      } else if lowScoreWordIndex >= cycle.count {
+        lowScoreWordIndex = 0
+      }
+    }
+  }
+
+  // MARK: - Original Functions (unchanged)
+
   static func randomWordEntry() -> WordEntry {
     // First priority: Check for saved words with score <= 4 (average <= 2.0)
     let allLowScoreWords = SaveUtil.loadWordsInScoreRange(min: 0, max: 4)
@@ -124,7 +266,8 @@ struct WordEntry {
     }
 
     // Third priority: Pick from remaining saved words (score > 4)
-    let allHigherScoreWords = SaveUtil.loadWordsInScoreRange(min: 5, max: 6)
+    let allHigherScoreWords = SaveUtil.loadWordsInScoreRange(
+      min: 5, max: 6, lastElementThreshold: 3)
     let higherScoreWords = allHigherScoreWords.filter { !recentWords.contains($0.word) }
 
     if !higherScoreWords.isEmpty {
@@ -217,9 +360,10 @@ struct WordEntry {
     var current = recentWords
     current.append(word)
 
-    // Keep only the most recent words
+    // Keep only the most recent words based on Settings.maxRecentWords
+    let maxRecentWords = Settings.maxRecentWords
     if current.count > maxRecentWords {
-      current.removeFirst()
+      current.removeFirst(current.count - maxRecentWords)
     }
 
     recentWords = current
@@ -271,101 +415,5 @@ struct WordEntry {
   // Add this method to use SaveUtil.loadWordsInScoreRange
   static func loadWordsInScoreRange(min: Int, max: Int) -> [WordScore] {
     return SaveUtil.loadWordsInScoreRange(min: min, max: max)
-  }
-}
-
-struct RootView: View {
-  @ObservedObject private var settings = Settings.shared
-  @State private var currentPage: Page = .loading
-  @State private var previousPage: Page = .loading
-  @State public var showingSettings: Bool = false
-  @State public var wordsStudied: Int = 0
-  @State public var currentWord: WordEntry = WordEntry(
-    word: "",
-    definitions: []
-  )
-  @State public var correctCount: Int = 0
-  @State public var incorrectCount: Int = 0
-  @State public var attemptedCount: Int = 0
-  @State public var unattemptedCount: Int = 0
-
-  @State public var sumPoints: Int = 0
-  @State public var totalPoints: Int = 0
-
-  @State public var learnedPage: Bool = false
-
-  var body: some View {
-    ZStack {
-      Background(currentPage: $currentPage)
-
-      VStack {
-        NavigationRow(
-          currentPage: $currentPage,
-          showingSettings: $showingSettings,
-          sumPoints: $sumPoints,
-          totalPoints: $totalPoints
-        )
-        Spacer()
-
-        switch currentPage {
-        case .loading:
-          ProgressView("Loading words...")
-            .onAppear {
-              WordEntry.loadWords {
-                currentWord = WordEntry.randomWordEntry()
-                currentPage = .home
-              }
-              SaveUtil.initialize()
-            }
-        case .home:
-          HomeView(
-            currentPage: $currentPage,
-            learnedPage: $learnedPage
-          )
-        case .dictionary:
-          FilteredDictionaryView(currentPage: $currentPage, currentWord: $currentWord)
-        case .filteredDictionary:  // Add this new case
-          FilteredDictionaryView(currentPage: $currentPage, currentWord: $currentWord)
-        case .info:
-          InfoView(currentPage: $currentPage)
-        case .question:
-          QuestionView(
-            currentPage: $currentPage,
-            currentWord: $currentWord,
-            correctCount: $correctCount,
-            incorrectCount: $incorrectCount,
-            sumPoints: $sumPoints,
-            totalPoints: $totalPoints,
-            learnedPage: $learnedPage
-          )
-        case .learn:
-          LearnView(
-            currentPage: $currentPage,
-            currentWord: $currentWord
-          )
-        case .dashboard:
-          DashboardView(
-            currentPage: $currentPage,
-            correctCount: $correctCount,
-            incorrectCount: $incorrectCount
-          )
-        case .feedback:
-          FeedbackView()
-        }
-        Spacer()
-      }
-      .animation(.easeInOut(duration: 0.2), value: currentPage)
-
-      // Settings popup overlay
-      if showingSettings {
-        SettingsPopup(
-          showingSettings: $showingSettings, currentPage: $currentPage
-        )
-        .transition(.opacity.combined(with: .scale))
-      }
-    }
-    .onChange(of: currentPage) { oldValue, newValue in
-      previousPage = oldValue
-    }
   }
 }

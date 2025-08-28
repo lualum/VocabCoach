@@ -42,6 +42,119 @@ struct APIResponse: Codable, Equatable {
   }
 }
 
+// Custom hand-drawn flag shape
+struct HandDrawnFlag: Shape {
+  func path(in rect: CGRect) -> Path {
+    var path = Path()
+
+    // Create an irregular, hand-drawn looking flag shape
+    let width = rect.width
+    let height = rect.height
+
+    // Start from bottom left with slight irregularity
+    path.move(to: CGPoint(x: 2, y: height - 1))
+
+    // Left edge with hand-drawn wobble
+    path.addCurve(
+      to: CGPoint(x: 1, y: height * 0.7),
+      control1: CGPoint(x: 0.5, y: height - 3),
+      control2: CGPoint(x: 1.5, y: height * 0.8)
+    )
+
+    path.addCurve(
+      to: CGPoint(x: 2, y: height * 0.3),
+      control1: CGPoint(x: 0, y: height * 0.6),
+      control2: CGPoint(x: 2.5, y: height * 0.4)
+    )
+
+    path.addCurve(
+      to: CGPoint(x: 1, y: 2),
+      control1: CGPoint(x: 1.5, y: height * 0.2),
+      control2: CGPoint(x: 0.5, y: 4)
+    )
+
+    // Top edge with wavy hand-drawn effect
+    path.addCurve(
+      to: CGPoint(x: width * 0.25, y: 1),
+      control1: CGPoint(x: width * 0.1, y: 0.5),
+      control2: CGPoint(x: width * 0.2, y: 2)
+    )
+
+    path.addCurve(
+      to: CGPoint(x: width * 0.5, y: 0.5),
+      control1: CGPoint(x: width * 0.3, y: 0),
+      control2: CGPoint(x: width * 0.45, y: 1.5)
+    )
+
+    path.addCurve(
+      to: CGPoint(x: width * 0.75, y: 1.5),
+      control1: CGPoint(x: width * 0.55, y: 0),
+      control2: CGPoint(x: width * 0.7, y: 0.5)
+    )
+
+    path.addCurve(
+      to: CGPoint(x: width - 2, y: 2),
+      control1: CGPoint(x: width * 0.8, y: 2.5),
+      control2: CGPoint(x: width * 0.9, y: 1)
+    )
+
+    // Right edge with wavy flag effect
+    path.addCurve(
+      to: CGPoint(x: width + 1, y: height * 0.2),
+      control1: CGPoint(x: width - 1, y: height * 0.1),
+      control2: CGPoint(x: width + 2, y: height * 0.15)
+    )
+
+    path.addCurve(
+      to: CGPoint(x: width - 1, y: height * 0.4),
+      control1: CGPoint(x: width - 1, y: height * 0.25),
+      control2: CGPoint(x: width + 1, y: height * 0.35)
+    )
+
+    path.addCurve(
+      to: CGPoint(x: width + 2, y: height * 0.6),
+      control1: CGPoint(x: width + 1, y: height * 0.45),
+      control2: CGPoint(x: width - 0.5, y: height * 0.55)
+    )
+
+    path.addCurve(
+      to: CGPoint(x: width - 1, y: height * 0.8),
+      control1: CGPoint(x: width, y: height * 0.65),
+      control2: CGPoint(x: width + 1, y: height * 0.75)
+    )
+
+    // Bottom right with hand-drawn irregularity
+    path.addCurve(
+      to: CGPoint(x: width - 2, y: height - 2),
+      control1: CGPoint(x: width + 0.5, y: height * 0.85),
+      control2: CGPoint(x: width - 3, y: height - 1)
+    )
+
+    // Bottom edge
+    path.addCurve(
+      to: CGPoint(x: width * 0.7, y: height - 1),
+      control1: CGPoint(x: width * 0.85, y: height - 3),
+      control2: CGPoint(x: width * 0.75, y: height + 1)
+    )
+
+    path.addCurve(
+      to: CGPoint(x: width * 0.4, y: height - 2),
+      control1: CGPoint(x: width * 0.65, y: height - 0.5),
+      control2: CGPoint(x: width * 0.45, y: height - 3)
+    )
+
+    path.addCurve(
+      to: CGPoint(x: 2, y: height - 1),
+      control1: CGPoint(x: width * 0.3, y: height - 1),
+      control2: CGPoint(x: width * 0.1, y: height - 2.5)
+    )
+
+    path.closeSubpath()
+
+    return path
+  }
+}
+
 struct QuestionView: View {
   @ObservedObject private var settings = Settings.shared
   @Binding var currentPage: Page
@@ -59,17 +172,91 @@ struct QuestionView: View {
 
   @Binding var learnedPage: Bool
 
+  // New state for flag animation
+  @State private var isNewWord: Bool = false
+  @State private var showNewFlag: Bool = false
+  @State private var flagScale: CGFloat = 0.1
+  @State private var flagRotation: Double = 0
+  @State private var flagOpacity: Double = 0
+
   var body: some View {
     ZStack {
       if result == .none || result == .loading || result == .connectionError {
         // Question input screen
         VStack(spacing: 40) {
-          // Word title
-          Text(currentWord.word)
-            .font(.largeTitle)
-            .fontWeight(.bold)
-            .foregroundColor(Shade.secondary)
-            .underline()
+          // Word title with New flag
+          ZStack {
+            Text(currentWord.word)
+              .font(.largeTitle)
+              .fontWeight(.bold)
+              .foregroundColor(Shade.secondary)
+              .underline()
+
+            // Hand-drawn New! Flag
+            // if showNewFlag && isNewWord {
+            //   HStack {
+            //     Spacer()
+            //     VStack {
+            //       ZStack {
+            //         // Hand-drawn flag background with multiple layers for depth
+            //         HandDrawnFlag()
+            //           .fill(
+            //             LinearGradient(
+            //               colors: [Color.red.opacity(0.9), Color.orange.opacity(0.8)],
+            //               startPoint: .topLeading,
+            //               endPoint: .bottomTrailing
+            //             )
+            //           )
+            //           .frame(width: 70, height: 32)
+            //           .overlay(
+            //             // Add hand-drawn border effect
+            //             HandDrawnFlag()
+            //               .stroke(
+            //                 LinearGradient(
+            //                   colors: [Color.red.opacity(0.4), Color.orange.opacity(0.6)],
+            //                   startPoint: .leading,
+            //                   endPoint: .trailing
+            //                 ),
+            //                 style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round)
+            //               )
+            //           )
+            //           .overlay(
+            //             // Add inner sketch lines for hand-drawn effect
+            //             HandDrawnFlag()
+            //               .stroke(
+            //                 Color.white.opacity(0.3),
+            //                 style: StrokeStyle(
+            //                   lineWidth: 0.8,
+            //                   lineCap: .round,
+            //                   lineJoin: .round,
+            //                   dash: [2, 3]
+            //                 )
+            //               )
+            //               .scaleEffect(0.85)
+            //           )
+
+            //         // Hand-drawn style text with slight irregularity
+            //         Text("NEW!")
+            //           .font(.system(size: 11, weight: .heavy, design: .rounded))
+            //           .foregroundColor(.white)
+            //           .shadow(color: .black.opacity(0.3), radius: 1, x: 0.5, y: 0.5)
+            //           .rotationEffect(.degrees(Double.random(in: -1...1))) // Slight random rotation for each letter effect
+            //           .scaleEffect(x: 1.05, y: 0.95) // Slightly squished for hand-drawn feel
+            //       }
+            //       .scaleEffect(flagScale)
+            //       .rotationEffect(.degrees(flagRotation))
+            //       .opacity(flagOpacity)
+            //       .shadow(color: .red.opacity(0.4), radius: 6, x: 2, y: 3)
+            //       // Add a subtle "paper texture" shadow
+            //       .shadow(color: .orange.opacity(0.2), radius: 2, x: -1, y: -1)
+
+            //       Spacer()
+            //     }
+            //     .padding(.leading, 8)
+            //   }
+            //   .offset(x: 45, y: -18)
+            // }
+          }
 
           // Connection error message
           if result == .connectionError {
@@ -101,11 +288,11 @@ struct QuestionView: View {
               .frame(maxHeight: .infinity)
 
             if userInput.isEmpty {
-              Text("Write a sentence using the word above")
+              Text("Write a sentence using the word above that demonstrates its meaning and usage.")
                 .font(.body)
                 .foregroundColor(.gray)
                 .padding(.horizontal, 56)
-                .padding(.vertical, 24)
+                .frame(height: 56)
                 .allowsHitTesting(false)
             }
           }
@@ -126,7 +313,7 @@ struct QuestionView: View {
                     )
                     .scaleEffect(0.8)
                 } else {
-                  Image(systemName: "checkmark.circle.fill")
+                  Image(systemName: "tray.and.arrow.up.fill")
                     .foregroundColor(.white)
                 }
                 Text(
@@ -140,8 +327,14 @@ struct QuestionView: View {
               .padding()
               .frame(maxWidth: .infinity)
               .background(
-                result == .loading ? Color.gray : Color.green
+                LinearGradient(
+                  gradient: Gradient(colors: Shade.buttonPrimary),
+                  startPoint: .leading,
+                  endPoint: .trailing
+                )
+                .opacity(result == .loading ? 0.5 : 1.0)  // adjust opacity here
               )
+
               .cornerRadius(12)
             }
             .disabled(
@@ -169,7 +362,7 @@ struct QuestionView: View {
               totalPoints += 3
             }) {
               HStack {
-                Image(systemName: "arrow.right.circle.fill")
+                Image(systemName: "forward")
                   .foregroundColor(.white)
                 Text("Skip")
                   .font(.title3)
@@ -178,7 +371,7 @@ struct QuestionView: View {
               }
               .padding()
               .frame(maxWidth: .infinity)
-              .background(Color.blue)
+              .background(Shade.buttonSecondary)
               .cornerRadius(12)
             }
             .disabled(result == .loading)
@@ -254,11 +447,7 @@ struct QuestionView: View {
 
               // Feedback section
               VStack(spacing: 8) {
-                HStack(spacing: 3) {
-                  Text("Feedback")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.white)
+                HStack(spacing: 12) {
 
                   Button(action: {
                     currentPage = .info
@@ -268,10 +457,15 @@ struct QuestionView: View {
                       .foregroundColor(.white)
                       .frame(width: 20, height: 20)
                   }
+
+                  Text("Feedback")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
                 }
-                .padding(.vertical, 8)
+                .frame(height: 56)
                 .frame(maxWidth: .infinity)
-                .background(Color.blue)
+                .background(Shade.buttonSecondary)
                 .cornerRadius(8)
 
                 ScrollView {
@@ -284,7 +478,7 @@ struct QuestionView: View {
                       alignment: .leading
                     )
                 }
-                .background(Color.blue.opacity(0.3))
+                .background(Shade.buttonSecondary.opacity(0.3))
                 .cornerRadius(8)
                 .frame(
                   maxWidth: .infinity,
@@ -302,7 +496,7 @@ struct QuestionView: View {
               learnedPage = true
             }) {
               HStack {
-                Image(systemName: "book.circle.fill")
+                Image(systemName: "book")
                   .foregroundColor(.white)
                 Text("Learn")
                   .font(.title3)
@@ -311,7 +505,7 @@ struct QuestionView: View {
               }
               .frame(maxWidth: .infinity)
               .frame(height: 56)
-              .background(Color.blue)
+              .background(Shade.buttonSecondary)
               .cornerRadius(16)
             }
 
@@ -319,7 +513,7 @@ struct QuestionView: View {
               resetQuestion()
             }) {
               HStack {
-                Image(systemName: "arrow.right.circle.fill")
+                Image(systemName: "arrow.right.square.fill")
                   .foregroundColor(.white)
                 Text("Continue")
                   .font(.title3)
@@ -328,7 +522,13 @@ struct QuestionView: View {
               }
               .frame(maxWidth: .infinity)
               .frame(height: 56)
-              .background(Color.green)
+              .background(
+                LinearGradient(
+                  gradient: Gradient(colors: Shade.buttonPrimary),
+                  startPoint: .leading,
+                  endPoint: .trailing
+                )
+              )
               .cornerRadius(16)
             }
           }
@@ -337,11 +537,71 @@ struct QuestionView: View {
 
         }
       }
-    }.onAppear {
+    }
+    .onAppear {
       if learnedPage {
         resetQuestion()
         learnedPage = false
+      } else {
+        checkIfWordIsNew()
       }
+    }
+    .onChange(of: currentWord.word) { _ in
+      checkIfWordIsNew()
+    }
+  }
+
+  private func checkIfWordIsNew() {
+    // Get new words from SaveUtil
+    let newWords = SaveUtil.checkNew()
+
+    // Check if current word is in the new words list
+    isNewWord = newWords.contains { wordScore in
+      wordScore.word.lowercased() == currentWord.word.lowercased()
+    }
+
+    if isNewWord {
+      animateNewFlag()
+    } else {
+      showNewFlag = false
+    }
+  }
+
+  private func animateNewFlag() {
+    showNewFlag = true
+
+    // Reset animation state
+    flagScale = 0.1
+    flagRotation = -15  // Start with more dramatic rotation for hand-drawn feel
+    flagOpacity = 0
+
+    // Animate entrance with spring effect (more bouncy for hand-drawn style)
+    withAnimation(.spring(response: 0.8, dampingFraction: 0.5, blendDuration: 0.1)) {
+      flagScale = 1.0
+      flagOpacity = 1.0
+    }
+
+    // More exaggerated rotation wiggle for hand-drawn effect
+    withAnimation(.easeInOut(duration: 0.4).delay(0.2)) {
+      flagRotation = 8
+    }
+
+    withAnimation(.easeInOut(duration: 0.4).delay(0.6)) {
+      flagRotation = -3
+    }
+
+    withAnimation(.easeInOut(duration: 0.3).delay(1.0)) {
+      flagRotation = 1
+    }
+
+    // Subtle irregular pulsing effect for organic feel
+    withAnimation(.easeInOut(duration: 1.2).delay(1.8).repeatForever(autoreverses: true)) {
+      flagScale = 1.03
+    }
+
+    // Add slight rotation variation for living feel
+    withAnimation(.easeInOut(duration: 2.0).delay(2.5).repeatForever(autoreverses: true)) {
+      flagRotation = -1
     }
   }
 
@@ -455,22 +715,21 @@ struct QuestionView: View {
 }
 
 struct GradingCard: View {
+  @ObservedObject private var settings = Settings.shared
   let title: String
   let isCorrect: Bool
   let icon: String
 
   var body: some View {
-    VStack(spacing: 4) {
-      HStack(spacing: 4) {
-        Image(systemName: icon)
-          .font(.title3)
-          .foregroundColor(isCorrect ? .green : .red)
+    HStack(spacing: 4) {
+      Image(systemName: icon)
+        .font(.title3)
+        .foregroundColor(isCorrect ? .green : .red)
 
-        Text(title + ":")
-          .font(.title3)
-          .fontWeight(.semibold)
-          .foregroundColor(Shade.secondary)
-      }
+      Text(title + ":")
+        .font(.title3)
+        .fontWeight(.semibold)
+        .foregroundColor(Shade.secondary)
       // Status indicator
       Image(
         systemName: isCorrect
@@ -491,6 +750,7 @@ struct GradingCard: View {
 }
 
 struct UsageGradingCard: View {
+  @ObservedObject private var settings = Settings.shared
   let title: String
   let isCorrect: String
   let icon: String
@@ -511,17 +771,15 @@ struct UsageGradingCard: View {
   }
 
   var body: some View {
-    VStack(spacing: 4) {
-      HStack(spacing: 4) {
-        Image(systemName: icon)
-          .font(.title3)
-          .foregroundColor(color)
+    HStack(spacing: 4) {
+      Image(systemName: icon)
+        .font(.title3)
+        .foregroundColor(color)
 
-        Text(title + ":")
-          .font(.title3)
-          .fontWeight(.semibold)
-          .foregroundColor(Shade.secondary)
-      }
+      Text(title + ":")
+        .font(.title3)
+        .fontWeight(.semibold)
+        .foregroundColor(Shade.secondary)
       // Status indicator
       Image(
         systemName: resultIcon

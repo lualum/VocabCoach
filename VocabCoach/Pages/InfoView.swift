@@ -11,196 +11,343 @@ struct InfoView: View {
   @ObservedObject private var settings = Settings.shared
   @Binding var currentPage: Page
 
-  enum SectionID: String, CaseIterable {
-    case howTo = "How To"
-    case scoring = "Scoring"
-    case credits = "Credits"
-  }
-
   var body: some View {
-    // ScrollViewReader provides a proxy to programmatically control the scroll position.
-    ScrollViewReader { proxy in
-      ScrollView {
-        VStack(spacing: 30) {
+    ScrollView {
+      VStack(spacing: 35) {
 
-          Text("Table of Contents")
-            .font(.largeTitle)
-            .fontWeight(.bold)
-            .foregroundColor(Shade.secondary)
-            .underline()
+        // MARK: - How It Works Section
+        VStack(spacing: 20) {
+          HStack {
+            Image(systemName: "lightbulb.fill")
+              .foregroundColor(Shade.secondary)
+              .font(.title2)
+            Text("How It Works")
+              .font(.largeTitle)
+              .fontWeight(.bold)
+              .foregroundColor(Shade.secondary)
+          }
 
-          // MARK: - Table of Contents
-          VStack(spacing: 15) {
+          VStack(alignment: .leading, spacing: 20) {
+            HStack(alignment: .top, spacing: 12) {
+              Text("1.")
+                .font(.headline)
+                .fontWeight(.bold)
+                .foregroundColor(.black)
+              VStack(alignment: .leading, spacing: 4) {
+                Text("Enter a sentence")
+                  .font(.headline)
+                  .fontWeight(.semibold)
+                Text("Use the vocabulary word in the text box provided.")
+                  .font(.body)
+                  .foregroundColor(.secondary)
+              }
+            }
 
-            HStack(spacing: 30) {
-              // Loop through all sections to create buttons dynamically.
-              ForEach(SectionID.allCases, id: \.self) { section in
-                Button(action: {
-                  // The action scrolls to the corresponding section ID with a smooth animation.
-                  withAnimation(.spring()) {
-                    proxy.scrollTo(section, anchor: .top)
+            HStack(alignment: .top, spacing: 12) {
+              Text("2.")
+                .font(.headline)
+                .fontWeight(.bold)
+                .foregroundColor(.black)
+              VStack(alignment: .leading, spacing: 4) {
+                Text("Demonstrate understanding")
+                  .font(.headline)
+                  .fontWeight(.semibold)
+                Text(
+                  "Show your knowledge through correct grammar, synonyms, and context clues. For example, instead of \"She is studious,\" write \"The studious young woman spent every weekend in the library, preparing for classes and reading extra books.\""
+                )
+                .font(.body)
+                .foregroundColor(.secondary)
+              }
+            }
+
+            HStack(alignment: .top, spacing: 12) {
+              Text("3.")
+                .font(.headline)
+                .fontWeight(.bold)
+                .foregroundColor(.black)
+              VStack(alignment: .leading, spacing: 4) {
+                Text("Submit for grading")
+                  .font(.headline)
+                  .fontWeight(.semibold)
+                Text("Click Submit to receive automatic feedback on your response.")
+                  .font(.body)
+                  .foregroundColor(.secondary)
+              }
+            }
+          }
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(25)
+          .background(Color(white: 0.96))
+          .cornerRadius(12)
+          .padding(.horizontal, 20)
+        }
+
+        // MARK: - Vocabulary Lists Section
+        VStack(spacing: 20) {
+          HStack {
+            Image(systemName: "book.fill")
+              .foregroundColor(Shade.secondary)
+              .font(.title2)
+            Text("Vocabulary Lists")
+              .font(.largeTitle)
+              .fontWeight(.bold)
+              .foregroundColor(Shade.secondary)
+          }
+
+          VStack(alignment: .leading, spacing: 15) {
+            Text("The app uses a Top-1000 SAT word list as default.")
+              .font(.body)
+              .foregroundColor(.primary)
+
+            Text("Starting with v1.2, you can:")
+              .font(.body)
+              .fontWeight(.medium)
+              .foregroundColor(.primary)
+
+            VStack(alignment: .leading, spacing: 8) {
+              Text("• Export the default dictionary for customization")
+              Text("• Upload your own vocabulary list (.csv format)")
+              Text("• Use format: word, definition")
+            }
+            .font(.body)
+            .foregroundColor(.secondary)
+            .padding(.leading, 10)
+          }
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(25)
+          .background(Color(white: 0.96))
+          .cornerRadius(12)
+          .padding(.horizontal, 20)
+        }
+
+        // MARK: - Scoring Section
+        VStack(spacing: 20) {
+          HStack {
+            Image(systemName: "star.fill")
+              .foregroundColor(.yellow)
+              .font(.title2)
+            Text("Scoring System")
+              .font(.largeTitle)
+              .fontWeight(.bold)
+              .foregroundColor(Shade.secondary)
+          }
+
+          VStack(spacing: 20) {
+            // Scoring criteria
+            VStack(alignment: .leading, spacing: 15) {
+              Text("Your sentence is scored on:")
+                .font(.headline)
+                .fontWeight(.semibold)
+                .foregroundColor(.primary)
+
+              HStack(alignment: .top, spacing: 15) {
+                VStack(alignment: .leading, spacing: 6) {
+                  Text("Grammar")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.black)
+                  Text("• Correct part of speech")
+                  Text("• Proper sentence structure")
+                }
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+                Spacer()
+
+                VStack(alignment: .leading, spacing: 6) {
+                  Text("Usage")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.black)
+                  Text("• Clear definition knowledge")
+                  Text("• Synonyms or context clues")
+                }
+                .font(.caption)
+                .foregroundColor(.secondary)
+              }
+            }
+
+            Divider()
+              .padding(.horizontal, 10)
+
+            // Score categories
+            VStack(alignment: .leading, spacing: 12) {
+              Text("Score Categories:")
+                .font(.headline)
+                .fontWeight(.semibold)
+                .foregroundColor(.primary)
+
+              VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top, spacing: 8) {
+                  HStack(spacing: 2) {
+                    ForEach(0..<3) { _ in
+                      Image(systemName: "star.fill")
+                        .foregroundColor(.yellow)
+                        .font(.caption)
+                    }
                   }
-                }) {
-                  Text(section.rawValue)
-                    .font(.headline)
-                    .foregroundColor(.blue)
+                  VStack(alignment: .leading, spacing: 2) {
+                    Text("Learned")
+                      .font(.subheadline)
+                      .fontWeight(.semibold)
+                    Text("Perfect score - appears less frequently")
+                      .font(.caption)
+                      .foregroundColor(.secondary)
+                  }
+                }
+
+                HStack(alignment: .top, spacing: 8) {
+                  HStack(spacing: 2) {
+                    ForEach(0..<2) { _ in
+                      Image(systemName: "star.fill")
+                        .foregroundColor(.orange)
+                        .font(.caption)
+                    }
+                    Image(systemName: "star")
+                      .foregroundColor(.gray)
+                      .font(.caption)
+                  }
+                  VStack(alignment: .leading, spacing: 2) {
+                    Text("Still Learning")
+                      .font(.subheadline)
+                      .fontWeight(.semibold)
+                    Text("Good understanding - will reappear")
+                      .font(.caption)
+                      .foregroundColor(.secondary)
+                  }
+                }
+
+                HStack(alignment: .top, spacing: 8) {
+                  HStack(spacing: 2) {
+                    Image(systemName: "star.fill")
+                      .foregroundColor(.red)
+                      .font(.caption)
+                    ForEach(0..<2) { _ in
+                      Image(systemName: "star")
+                        .foregroundColor(.gray)
+                        .font(.caption)
+                    }
+                  }
+                  VStack(alignment: .leading, spacing: 2) {
+                    Text("Newly Learned")
+                      .font(.subheadline)
+                      .fontWeight(.semibold)
+                    Text("Needs practice - will appear frequently")
+                      .font(.caption)
+                      .foregroundColor(.secondary)
+                  }
                 }
               }
             }
           }
-          .padding(.vertical, 20)
-          .frame(maxWidth: .infinity)
-          .background(Color(white: 0.95))
-          .cornerRadius(15)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(25)
+          .background(Color(white: 0.96))
+          .cornerRadius(12)
           .padding(.horizontal, 20)
-
-          howToSection
-            .id(SectionID.howTo)
-
-          scoringSection
-            .id(SectionID.scoring)  // Assigns a unique ID to this view.
-
-          // MARK: - Credits Section
-          creditsSection
-            .id(SectionID.credits)  // Assigns a unique ID to this view.
-
-          // Bottom padding to ensure last section can scroll fully to the top.
-          Color.clear
-            .frame(height: 50)
         }
-        .padding(.top, 20)
+
+        // MARK: - Contact & Support Section
+        VStack(spacing: 20) {
+          HStack {
+            Image(systemName: "envelope.fill")
+              .foregroundColor(Shade.secondary)
+              .font(.title2)
+            Text("Contact & Support")
+              .font(.largeTitle)
+              .fontWeight(.bold)
+              .foregroundColor(Shade.secondary)
+          }
+
+          VStack(alignment: .leading, spacing: 10) {
+            Text("Need help or have feedback?")
+              .font(.body)
+              .foregroundColor(.primary)
+
+            Link(
+              "vocabmateapp@gmail.com", destination: URL(string: "mailto:vocabmateapp@gmail.com")!
+            )
+            .font(.body)
+            .foregroundColor(.blue)
+          }
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(25)
+          .background(Color(white: 0.96))
+          .cornerRadius(12)
+          .padding(.horizontal, 20)
+        }
+
+        // MARK: - Acknowledgements Section
+        VStack(spacing: 20) {
+          HStack {
+            Image(systemName: "heart.fill")
+              .foregroundColor(.red)
+              .font(.title2)
+            Text("Acknowledgements")
+              .font(.largeTitle)
+              .fontWeight(.bold)
+              .foregroundColor(Shade.secondary)
+          }
+
+          VStack(alignment: .leading, spacing: 15) {
+            VStack(alignment: .leading, spacing: 6) {
+              Text("Inspiration")
+                .font(.headline)
+                .fontWeight(.semibold)
+                .foregroundColor(.black)
+              Text("Mr. Christopher Hurshman, Honors English Teacher")
+              Text("The Harker School, San Jose, CA")
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+              Text("Vocabulary Sources")
+                .font(.headline)
+                .fontWeight(.semibold)
+                .foregroundColor(.black)
+              Text("Jay Koo Academy")
+              Text("SAT Vocabulary by christinee91")
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+              Text("Technology")
+                .font(.headline)
+                .fontWeight(.semibold)
+                .foregroundColor(.black)
+              Text("Google Gemini Developer APIs")
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+              Text("Developer")
+                .font(.headline)
+                .fontWeight(.semibold)
+                .foregroundColor(.black)
+              Link(
+                "Lucas A. Lum (github.com/lualum)",
+                destination: URL(string: "https://github.com/lualum")!)
+              Text("Co-founder, Inspira Foundation Inc.")
+              Link(
+                "inspirafoundationinc.org",
+                destination: URL(string: "https://inspirafoundationinc.org")!
+              )
+              .font(.caption)
+              .foregroundColor(.blue)
+            }
+          }
+          .font(.body)
+          .foregroundColor(.secondary)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(25)
+          .background(Color(white: 0.96))
+          .cornerRadius(12)
+          .padding(.horizontal, 20)
+        }
+
+        // Bottom padding
+        Color.clear
+          .frame(height: 10)
       }
+      .padding(.top, 20)
     }
     .navigationTitle("Information")
-  }
-
-  private var howToSection: some View {
-    VStack(spacing: 20) {
-      Text("How To")
-        .font(.largeTitle)
-        .fontWeight(.bold)
-        .foregroundColor(Shade.secondary)
-        .underline()
-
-      VStack(alignment: .leading, spacing: 25) {
-        Text(
-          "Enter a sentence in the grey text box that correctly uses the word above. Make sure your sentence shows that you truly understand the word’s meaning—this could be through using synonyms, context clues, or clearly demonstrating the definition. When you're finished, click [Submit] to have your response graded using the rubric below."
-        )
-      }
-      .font(.body)
-      .foregroundColor(.black)
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .padding(30)
-      .background(Color(white: 0.95))
-      .cornerRadius(15)
-      .padding(.horizontal, 20)
-    }
-  }
-
-  private var scoringSection: some View {
-    VStack(spacing: 20) {
-      Text("Scoring")
-        .font(.largeTitle)
-        .fontWeight(.bold)
-        .foregroundColor(Shade.secondary)
-        .underline()
-
-      VStack(spacing: 15) {
-        // Context header with star rating
-        VStack(spacing: 10) {
-          HStack {
-            Image(systemName: "star.fill").foregroundColor(.yellow)
-            Image(systemName: "star.fill").foregroundColor(.orange)
-            Image(systemName: "star.fill").foregroundColor(.orange)
-          }
-          .font(.title)
-
-          HStack {
-            Spacer()
-            Text("Grammar").font(.title2).fontWeight(.medium)
-            Spacer()
-            Text("Usage").font(.title2).fontWeight(.medium)
-            Spacer()
-          }
-          .foregroundColor(Shade.primary)
-          .padding(.horizontal, 40)
-        }
-
-        // Divider
-        Rectangle()
-          .fill(Color.gray.opacity(0.4))
-          .frame(height: 1)
-          .padding(.horizontal, 20)
-
-        // Scoring criteria
-        VStack(alignment: .leading, spacing: 12) {
-          VStack(alignment: .leading, spacing: 4) {
-            Text("Grammar")
-              .font(.headline)
-              .fontWeight(.semibold)
-            Text("- Vocab has correct part of speech")
-            Text("- Correct grammar in sentence")
-          }
-
-          VStack(alignment: .leading, spacing: 4) {
-            Text("Usage")
-              .font(.headline)
-              .fontWeight(.semibold)
-            Text("- Show clear knowledge of definition by using either its synonyms or its meaning")
-          }
-        }
-        .font(.body)
-        .foregroundColor(Shade.primary)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 20)
-      }
-      .padding(.vertical, 20)
-      .background(Color(white: 0.95))
-      .cornerRadius(15)
-      .padding(.horizontal, 20)
-    }
-  }
-
-  private var creditsSection: some View {
-    VStack(spacing: 20) {
-      Text("Credits")
-        .font(.largeTitle)
-        .fontWeight(.bold)
-        .foregroundColor(Shade.secondary)
-        .underline()
-
-      VStack(alignment: .leading, spacing: 25) {
-        VStack(alignment: .leading, spacing: 8) {
-          Text("Vocabulary Lists:")
-            .font(.headline)
-            .fontWeight(.semibold)
-          Text("Jay Koo Academy")
-          Text("SAT Vocabulary by christinee91")
-        }
-
-        VStack(alignment: .leading, spacing: 8) {
-          Text("Teacher/Format:")
-            .font(.headline)
-            .fontWeight(.semibold)
-          Text("Christopher Hurshman")
-        }
-
-        VStack(alignment: .leading, spacing: 8) {
-          Text("Developer:")
-            .font(.headline)
-            .fontWeight(.semibold)
-          Link(
-            "Lucas Lum (github.com/lualum)",
-            destination: URL(string: "https://github.com/lualum")!)
-        }
-      }
-      .font(.body)
-      .foregroundColor(Shade.primary)
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .padding(30)
-      .background(Color(white: 0.95))
-      .cornerRadius(15)
-      .padding(.horizontal, 20)
-    }
   }
 }
