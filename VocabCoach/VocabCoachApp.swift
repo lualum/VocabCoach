@@ -40,6 +40,7 @@ struct VocabCoachApp: App {
       ContentView()
         .statusBar(hidden: true)
         .buttonStyle(DefaultButtonStyle())
+        .preferredColorScheme(.light)
     }
   }
 }

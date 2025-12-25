@@ -142,6 +142,31 @@ struct WordEntry {
     }
   }
 
+  static func removeAllWords(completion: @escaping (Bool, String?) -> Void = { _, _ in }) {
+    DispatchQueue.global(qos: .userInitiated).async {
+      // Store current dictionary in case we need to revert
+      let currentDict = dict
+
+      // Clear the in-memory dictionary
+      dict = [:]
+
+      // Save to file
+      let success = saveDictionaryToFile()
+
+      DispatchQueue.main.async {
+        if success {
+          // Reset word selection state since dictionary is now empty
+          resetWordSelection()
+          completion(true, nil)
+        } else {
+          // Revert to previous dictionary if save failed
+          dict = currentDict
+          completion(false, "Failed to save empty dictionary to file")
+        }
+      }
+    }
+  }
+
   /// Reset dictionary to default words from defaultWords.json
   static func resetToDefaultWords(completion: @escaping (Bool, String?) -> Void = { _, _ in }) {
     DispatchQueue.global(qos: .userInitiated).async {

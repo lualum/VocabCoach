@@ -1,10 +1,3 @@
-//
-//  QuestionView.swift
-//  VocabCoach
-//
-//  Created by Lucas Lum on 6/1/25.
-//
-
 import Foundation
 import SwiftUI
 
@@ -615,7 +608,7 @@ struct QuestionView: View {
 
     guard
       let url = URL(
-        string: "https://gemini-proxy.VocabMateapp.workers.dev/"
+        string: "https://gemini-proxy.vocabmateapp.workers.dev/"
       )
     else {
       result = .error

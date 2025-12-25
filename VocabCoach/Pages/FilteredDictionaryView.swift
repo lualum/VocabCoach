@@ -1,10 +1,3 @@
-//
-//  FilteredDictionaryView.swift
-//  VocabCoach
-//
-//  Created by Lucas Lum on 6/11/25.
-//
-
 import SwiftUI
 
 // Singleton to manage filter state across navigation

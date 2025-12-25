@@ -177,6 +177,11 @@ struct FullDictionaryView: View {
           .disabled(isOperationInProgress)
         }
 
+        // add in instructions
+        Text("CSV format: { word1, definition1 }, { word2, definition2 }...")
+          .font(.caption)
+          .foregroundColor(.gray)
+
         // Loading indicator
         if isOperationInProgress {
           HStack(spacing: 8) {

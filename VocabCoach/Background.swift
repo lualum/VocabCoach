@@ -1,10 +1,3 @@
-//
-//  Background.swift
-//  VocabCoach
-//
-//  Created by Lucas Lum on 6/1/25.
-//
-
 import SwiftUI
 
 class Shade: ObservableObject {
